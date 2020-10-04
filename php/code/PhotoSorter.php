@@ -4,6 +4,7 @@ $log = '';
 ini_set('max_execution_time', 0); // 0 = Unlimited
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
+ini_set('memory_limit','2G');
 error_reporting(E_ALL);
 
 echo date('Y-m-d H:i:s');
@@ -518,7 +519,7 @@ class PhotoSorter
         }
 
         // If date is invalid, unset date
-        if($date == '1970-01-01 00:00:00')
+        if(!empty($date) && $date == '1970-01-01 00:00:00')
         {
             $date = '';
         }
@@ -627,7 +628,7 @@ class PhotoSorter
                 `source`  varchar(1000) NULL ,
                 `date`  timestamp NULL DEFAULT CURRENT_TIMESTAMP ,
                 `checksum`  varchar(200) NULL ,
-                `filesize`  int(255) UNSIGNED NULL ,
+                `filesize`  bigint(255) UNSIGNED NULL ,
                 `make`  varchar(50) NULL ,
                 `model`  varchar(50) NULL ,
                 `mime_type`  varchar(50) NULL ,
