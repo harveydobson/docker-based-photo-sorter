@@ -1,0 +1,123 @@
+version: '3.1'
+
+services:
+
+  db:
+    image: mariadb
+    restart: always
+    volumes:
+      - ./data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: photo-sorter
+    ports:
+      - "33306:3306"
+  main:
+    container_name: file-indexer
+    build:
+      context: ./php
+      args:
+        - INSTALL_EXIF=true
+        - INSTALL_FFMPEG=true
+    depends_on: 
+    - db
+    volumes:
+    - ./log:/home/log
+    - ./php/code:/home/code
+    - ${DATA_DIR}:/home/data
+
+  worker1:
+    container_name: file-worker-1
+    build:
+      context: ./php
+    depends_on: 
+    - db
+    volumes:
+    - ./log:/home/log
+    - ./php/code:/home/code
+    - ${DATA_DIR}:/home/data
+    entrypoint: [ "sh", "-c", "./worker.sh" ]
+
+  worker2:
+    container_name: file-worker-2
+    build:
+      context: ./php
+    depends_on: 
+    - db
+    volumes:
+    - ./log:/home/log
+    - ./php/code:/home/code
+    - ${DATA_DIR}:/home/data
+    entrypoint: [ "sh", "-c", "./worker.sh" ]
+
+  worker3:
+    container_name: file-worker-3
+    build:
+      context: ./php
+    depends_on: 
+    - db
+    volumes:
+    - ./log:/home/log
+    - ./php/code:/home/code
+    - ${DATA_DIR}:/home/data
+    entrypoint: [ "sh", "-c", "./worker.sh" ]
+
+  worker4:
+    container_name: file-worker-4
+    build:
+      context: ./php
+    depends_on: 
+    - db
+    volumes:
+    - ./log:/home/log
+    - ./php/code:/home/code
+    - ${DATA_DIR}:/home/data
+    entrypoint: [ "sh", "-c", "./worker.sh" ]
+
+  worker5:
+    container_name: file-worker-5
+    build:
+      context: ./php
+    depends_on: 
+    - db
+    volumes:
+    - ./log:/home/log
+    - ./php/code:/home/code
+    - ${DATA_DIR}:/home/data
+    entrypoint: [ "sh", "-c", "./worker.sh" ]
+
+  worker6:
+    container_name: file-worker-6
+    build:
+      context: ./php
+    depends_on: 
+    - db
+    volumes:
+    - ./log:/home/log
+    - ./php/code:/home/code
+    - ${DATA_DIR}:/home/data
+    entrypoint: [ "sh", "-c", "./worker.sh" ]
+
+  worker7:
+    container_name: file-worker-7
+    build:
+      context: ./php
+    depends_on: 
+    - db
+    volumes:
+    - ./log:/home/log
+    - ./php/code:/home/code
+    - ${DATA_DIR}:/home/data
+    entrypoint: [ "sh", "-c", "./worker.sh" ]
+
+  worker8:
+    container_name: file-worker-8
+    build:
+      context: ./php
+    depends_on: 
+    - db
+    volumes:
+    - ./log:/home/log
+    - ./php/code:/home/code
+    - ${DATA_DIR}:/home/data
+    entrypoint: [ "sh", "-c", "./worker.sh" ]

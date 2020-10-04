@@ -1,0 +1,2 @@
+ # Example command to remove the date prefix
+ get-childitem * | rename-item -newname { [string]($_.name).substring(15) }
