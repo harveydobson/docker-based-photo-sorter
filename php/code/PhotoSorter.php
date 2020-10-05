@@ -4,7 +4,7 @@ $log = '';
 ini_set('max_execution_time', 0); // 0 = Unlimited
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
-ini_set('memory_limit','2G');
+ini_set('memory_limit','6G');
 error_reporting(E_ALL);
 
 echo date('Y-m-d H:i:s');
@@ -240,6 +240,8 @@ class PhotoSorter
 
     private function recursiveWorker($pdo)
     {
+        $memory = memory_get_usage();                       // KB  // MB
+        $this->writeToLog("Memory allocation at " . ($memory / 1024 / 1024 ) . "M/" . ini_get('memory_limit'));
         $stmt = $pdo->query("SELECT * FROM files WHERE checksum IS NULL ORDER BY RAND() LIMIT 1");
         
         $file = $stmt->fetch();
@@ -271,6 +273,10 @@ class PhotoSorter
 
         $pdo->query("UPDATE files SET checksum = '$hash' WHERE file_id = '$file[file_id]'");
         
+        unset($hash);
+        unset($full_path);
+        unset($file);
+
         $this->writeToLog("Saved.. Moving On");
 
         $this->recursiveWorker($pdo);
@@ -594,6 +600,7 @@ class PhotoSorter
              $this->writeToLog("Connection to database succeeded");  
              // Increase prepared statement count limit
              $pdo->query('set global max_prepared_stmt_count=5000000;');
+             $pdo->query('SET GLOBAL max_connections = 1000000;');
              return $pdo;
         } catch (\PDOException $e) {
              $this->writeToLog($e->getMessage() . ' - ' . $e->getCode());
@@ -658,12 +665,18 @@ class PhotoSorter
 
     function writeToLog($string)
     {
+        $my_log_path = $this->log_path . date('Y-m-d H:i:s', $this->start_time) . '/';
+
+        if(!file_exists($my_log_path))
+        {
+            mkdir($my_log_path);
+        }
 
         $log_string = date('Y-m-d H:i:s') . ': ' . $string . "\n";
 
         echo $log_string;
 
-        $file = $this->log_path . 'output-' . strtoupper($this->mode) . '-' . date('Y-m-d-H-i-s',  $this->start_time) . '.log';
+        $file = $my_log_path . $this->mode . '-' . gethostname() . '.log';
 
         file_put_contents($file, $log_string, FILE_APPEND);
 
