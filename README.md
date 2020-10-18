@@ -22,7 +22,8 @@ This script is designed for photos and videos, but will sort all files into fold
    - Once the indexing process has completed and all files have checksums assigned, the main process will start moving the files to named directories.
    - If the indexing process has completed but not all files have checksums assigned, the moving process will sleep for 15 seconds before checking again.
    - Unique images are moved to an output folder `output/YYYY-MM-DD/`. If the meta data identifies a make and model for the device, it will create a sub-directory inside this folder `output/YYYY-MM-DD/make_model/` this is useful if you are organising photos from multiple devices say a phone and camera.
-   - Upon moving, the content of the file isn't changed, but the script will add the 'Creation Date/Date Taken' timestamp to the start of the filename i.e. `DSC08812.JPG` becomes `20200421143144_DSC08812.JPG`. This is done both to create a truely unique filename, but also for improved chronological viewing as there will be times when 
+   - Upon moving, the content of the file isn't changed, but the script will add the 'Creation Date/Date Taken' timestamp to the start of the filename i.e. `DSC08812.JPG` becomes `20200421143144_DSC08812.JPG`. This is done both to create a truely unique filename, but also for improved chronological viewing as there will be times when
+   - Finally once moved, the script will create a `file_index_backup_<date>.sql` export of the 'files' table for future use. I added this feature in right at the end as I managed to corrupt my database by forcing docker to quit. It helps for this kind of recovery, but more so it helps should you ever want to pick up where you left off further down the line.  
 
 ## To use
 

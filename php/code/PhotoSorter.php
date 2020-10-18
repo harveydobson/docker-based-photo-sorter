@@ -223,6 +223,10 @@ class PhotoSorter
             }
         }
 
+        $this->writeToLog("Writing file index backup to /home/data/output/file_index_backup.sql - START");
+        exec('mysqldump -h db -u root -proot photo-sorter files > /home/data/output/file_index_backup-'.date('Y-m-d-H-i-s').'.sql');
+        $this->writeToLog("Writing file index backup to /home/data/output/file_index_backup.sql COMPLETE");
+
         unlink('moving.status');
         return TRUE;
     }
@@ -498,30 +502,31 @@ class PhotoSorter
             php_1  | )
 */
             // IF still can't work out date. Some custom handling for different naming formats
-            if(empty($date))
+            
+            $masks[] = 'YYYYMMDDHHIISS';
+            $masks[] = 'YYYYMMDD_HHIISS';
+
+            foreach($masks as $datemask)
             {
-                // Input Format: VID_20190831_121407.mp4
-                if(substr($filename, -23, -20) == 'VID')
+                if(empty($date)) 
                 {
-                    $year   = substr($filename, -19, -15);
-                    $month  = substr($filename, -15, -13); 
-                    $day    = substr($filename, -13, -11); 
-
-                    $hour   = substr($filename, -10, -8);
-                    $min    = substr($filename, -8,  -6); 
-                    $sec    = substr($filename, -6,  -4); 
-
-                    if(is_numeric($year . $month . $day)){
-                        if(is_numeric($hour . $min . $sec)) {
-                            $date = mktime($hour, $min, $sec, $month, $day, $year);
-                        } else {
-                            $date = mktime(00, 00, 00, $month, $day, $year);
-                            $date = date('Y-m-d H:i:s', $date);
-                        }
-                    }
+                    $date = PhotoSorter::datemask($filename, $datemask);
                     
+                    if($date == '1970-01-01 00:00:00')
+                    {
+                        $date = '';
+                    } else {
+                        if(!empty($date))
+                            echo '\n determined a date: ' . $date . '\n';
+                    }
+
+                } else {
+                    continue;
                 }
             }
+
+            
+            
         }
 
         // If date is invalid, unset date
@@ -564,6 +569,53 @@ class PhotoSorter
 
     }
 
+    public static function datemask($filename, $mask)
+    {
+        // separators
+        $regex_masks['_'] = '([_])';
+        $regex_masks[' '] = '([\ ])';
+        $regex_masks['-'] = '([-])';
+
+        // extension
+        $regex_masks['.EXT'] = '([.][a-z0-9][a-z0-9][a-z0-9])';
+
+        // date fields
+        $regex_masks['YYYY'] = '([12]\d{3})';
+        $regex_masks['MM'] = '(0[1-9]|1[0-2])';
+        $regex_masks['DD'] = '(0[1-9]|[12]\d|3[01])';
+        $regex_masks['HH'] = '([0-2]\d)';
+        $regex_masks['II'] = '([0-5]\d)';
+        $regex_masks['SS'] = '([0-5]\d)';
+
+        // remove leading or ending chars
+        $regex_masks['X'] = '';
+
+        foreach($regex_masks as $key=>$regex)
+        {
+            $mask = str_replace($key, $regex, $mask);
+        }
+
+        preg_match('/' . $mask . '/', $filename, $matches);
+
+        $format = 'Y-m-d H:i:s';
+
+        if(!is_array($matches) || empty($matches))
+        {
+            return false;
+        }
+        
+        $date = date($format, strtotime($matches[0]));
+
+        $d = DateTime::createFromFormat($format, $date);
+        // The Y ( 4 digits year ) returns TRUE for any integer with any number of digits so changing the comparison from == to === fixes the issue.
+        if($d && $d->format($format) === $date && $date != '1970-01-01 00:00:00')
+        {
+            return $date;
+        } else {
+            return FALSE;
+        }        
+    }
+
     private function rglob($dir, $pattern, $matches=array())
     {
         $dir_list = glob($dir . '*/');
@@ -574,10 +626,10 @@ class PhotoSorter
         
         foreach($dir_list as $directory)
         {        
-            $this->writeToLog("Scanning $directory");
 
-            if(substr($directory, 0, strlen($this->output_dir) != $this->output_dir))
+            if(substr($directory, 0, strlen($this->output_dir)) != $this->output_dir)
             {
+                $this->writeToLog("Scanning $directory");
                 $matches = $this->rglob($directory, $pattern, $matches);
             }
         }
@@ -665,7 +717,7 @@ class PhotoSorter
 
     function writeToLog($string)
     {
-        $my_log_path = $this->log_path . date('Y-m-d H:i:s', $this->start_time) . '/';
+        $my_log_path = $this->log_path . date('Y-m-d-H-i', $this->start_time) . '/';
 
         if(!file_exists($my_log_path))
         {
